@@ -1,0 +1,30 @@
+package com.print.printcloud.order.utils;
+
+import com.print.printcloud.order.vo.ResultVO;
+
+/**
+ * Created by 郑钦泓
+ * 2019-10-24 17:48
+ */
+
+public class ResultVOUtil {
+
+    public static ResultVO success(Object object) {
+        ResultVO resultVO = new ResultVO();
+        resultVO.setData(object);
+        resultVO.setCode(0);
+        resultVO.setMsg("成功");
+        return resultVO;
+    }
+
+    public static ResultVO success() {
+        return success(null);
+    }
+
+    public static ResultVO error(Integer code, String msg) {
+        ResultVO resultVO = new ResultVO();
+        resultVO.setCode(code);
+        resultVO.setMsg(msg);
+        return resultVO;
+    }
+}

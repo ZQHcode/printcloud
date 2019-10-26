@@ -7,4 +7,10 @@ spring:
   jpa:
     show-sql: true
 
+  profiles:
+    active: dev
+
+wechat:
+  mpAppId: wxf3d340ebe4ee053e
+  mpAppSecret: c278eb990a861d31e0d2411ceac4ac8c
 

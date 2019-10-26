@@ -93,6 +93,8 @@ public class OrderServiceImpl implements OrderService {
 
         //修改订单状态
         orderDTO.setOrderStatus(OrderStatusEnum.CANCEL.getCode());
+        Integer payStatus = orderDTO.getPayStatus();
+        orderDTO.setPayStatus(PayStatusEnum.WAIT.getCode());
         BeanUtils.copyProperties(orderDTO, orderMaster);
         OrderMaster updateResult = orderMasterRepository.save(orderMaster);
         if (updateResult == null) {
@@ -101,10 +103,11 @@ public class OrderServiceImpl implements OrderService {
         }
 
         //如果已支付, 需要退款
-        if (orderDTO.getPayStatus().equals(PayStatusEnum.SUCCESS.getCode())) {
+        if (payStatus.equals(PayStatusEnum.SUCCESS.getCode())) {
 //            payService.refund(orderDTO);
             //TODO
         }
+
 
         return orderDTO;
     }
@@ -249,7 +252,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Page<OrderDTO> findCancel(Pageable pageable) {
 
-        Page<OrderMaster> orderMasterPage = orderMasterRepository.findByOrderStatusAndPayStatus(OrderStatusEnum.CANCEL.getCode(), PayStatusEnum.SUCCESS.getCode(), pageable);
+        Page<OrderMaster> orderMasterPage = orderMasterRepository.findByOrderStatusAndPayStatus(OrderStatusEnum.CANCEL.getCode(), PayStatusEnum.WAIT.getCode(), pageable);
 
         List<OrderDTO> orderDTOList = OrderMaster2OrderDTOConverter.convert(orderMasterPage.getContent());
 
@@ -313,7 +316,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Page<OrderDTO> findUserCancel(String buyerOpenid, Pageable pageable) {
 
-        Page<OrderMaster> orderMasterPage = orderMasterRepository.findByOrderStatusAndPayStatusAndBuyerOpenid(OrderStatusEnum.CANCEL.getCode(),PayStatusEnum.SUCCESS.getCode(),buyerOpenid,pageable);
+        Page<OrderMaster> orderMasterPage = orderMasterRepository.findByOrderStatusAndPayStatusAndBuyerOpenid(OrderStatusEnum.CANCEL.getCode(),PayStatusEnum.WAIT.getCode(),buyerOpenid,pageable);
 
         List<OrderDTO> orderDTOList = OrderMaster2OrderDTOConverter.convert(orderMasterPage.getContent());
 

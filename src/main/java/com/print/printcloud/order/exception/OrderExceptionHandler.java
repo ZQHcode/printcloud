@@ -4,13 +4,14 @@ import com.print.printcloud.order.utils.*;
 import com.print.printcloud.order.vo.ResultVO;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
+import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  * Created by 郑钦泓
  * 2019-10-24 20:24
  */
 @ControllerAdvice
+@ResponseBody
 public class OrderExceptionHandler {
 
     @ExceptionHandler(value = OrderException.class)

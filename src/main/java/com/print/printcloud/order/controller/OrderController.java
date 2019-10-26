@@ -2,6 +2,8 @@ package com.print.printcloud.order.controller;
 
 import com.print.printcloud.order.dto.OrderDTO;
 import com.print.printcloud.order.service.OrderService;
+import com.print.printcloud.order.utils.ResultVOUtil;
+import com.print.printcloud.order.vo.ResultVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -28,164 +30,169 @@ public class OrderController {
     //查找一份订单
     @GetMapping("/findOne")
     @ResponseBody
-    public OrderDTO findOne(String orderId){
+    public ResultVO findOne(String orderId){
 
-        return orderService.findOne(orderId);
+        return ResultVOUtil.success(orderService.findOne(orderId));
     }
 
     //查询某个用户的所有订单列表
     @GetMapping("/findUserOrderList")
     @ResponseBody
-    public Page<OrderDTO> findUserOrderList(@RequestParam(value = "page", defaultValue = "1") Integer page,
+    public ResultVO findUserOrderList(@RequestParam(value = "page", defaultValue = "1") Integer page,
                                             @RequestParam(value = "size", defaultValue = "10") Integer size,
                                             @RequestParam String buyerOpenid){
         PageRequest request = new PageRequest(page - 1, size);
-        return orderService.findUserOrderList(buyerOpenid,request);
+        return ResultVOUtil.success(orderService.findUserOrderList(buyerOpenid,request));
     }
 
     //取消订单
     @PostMapping("/cancel")
     @ResponseBody
-    public OrderDTO cancel(@RequestParam("orderId") String orderId){
+    public ResultVO cancel(@RequestParam("orderId") String orderId){
 
         OrderDTO orderDTO = orderService.findOne(orderId);
-        return orderService.cancel(orderDTO);
+        orderService.cancel(orderDTO);
+        return ResultVOUtil.success();
     }
 
     //修改订单为待配送或待收货
     @PostMapping("/send")
     @ResponseBody
-    public OrderDTO send(@RequestParam("orderId") String orderId){
+    public ResultVO send(@RequestParam("orderId") String orderId){
 
         OrderDTO orderDTO = orderService.findOne(orderId);
-        return orderService.send(orderDTO);
+        orderService.send(orderDTO);
+        return ResultVOUtil.success();
     }
 
     //修改订单为已配送或已收货
     @PostMapping("/finish")
     @ResponseBody
-    public OrderDTO finish(@RequestParam("orderId") String orderId){
+    public ResultVO finish(@RequestParam("orderId") String orderId){
 
         OrderDTO orderDTO = orderService.findOne(orderId);
-        return orderService.finish(orderDTO);
+        orderService.finish(orderDTO);
+        return ResultVOUtil.success();
     }
 
     //修改订单为支付成功
     @PostMapping("/paid")
     @ResponseBody
-    public OrderDTO paid(@RequestParam("orderId") String orderId){
+    public ResultVO paid(@RequestParam("orderId") String orderId){
 
         OrderDTO orderDTO = orderService.findOne(orderId);
-        return orderService.paid(orderDTO);
+        orderService.paid(orderDTO);
+        return ResultVOUtil.success();
     }
 
     //查询所有订单
     @GetMapping("/findList")
     @ResponseBody
-    public Page<OrderDTO> findList(@RequestParam(value = "page", defaultValue = "1") Integer page,
+    public ResultVO findList(@RequestParam(value = "page", defaultValue = "1") Integer page,
                                    @RequestParam(value = "size", defaultValue = "10") Integer size
                                    ){
 
         PageRequest request = new PageRequest(page - 1, size);
-        return orderService.findList(request);
+        return ResultVOUtil.success(orderService.findList(request));
     }
 
     //查询状态为待打印的订单
     @GetMapping("/findWaitPrint")
     @ResponseBody
-    public Page<OrderDTO> findWaitPrint(@RequestParam(value = "page", defaultValue = "1") Integer page,
+    public ResultVO findWaitPrint(@RequestParam(value = "page", defaultValue = "1") Integer page,
                                         @RequestParam(value = "size", defaultValue = "10") Integer size
                                         ){
 
         PageRequest request = new PageRequest(page - 1, size);
-        return orderService.findWaitPrint(request);
+        return ResultVOUtil.success(orderService.findWaitPrint(request));
     }
 
     //查询状态为待配送的订单
     @GetMapping("/findWaitSend")
     @ResponseBody
-    public Page<OrderDTO> findWaitSend(@RequestParam(value = "page", defaultValue = "1") Integer page,
+    public ResultVO findWaitSend(@RequestParam(value = "page", defaultValue = "1") Integer page,
                                         @RequestParam(value = "size", defaultValue = "10") Integer size
                                         ){
 
         PageRequest request = new PageRequest(page - 1, size);
-        return orderService.findWaitSend(request);
+        return ResultVOUtil.success(orderService.findWaitSend(request));
     }
 
     //查询状态为已配送的订单
     @GetMapping("/findFinishSend")
     @ResponseBody
-    public Page<OrderDTO> findFinishSend(@RequestParam(value = "page", defaultValue = "1") Integer page,
+    public ResultVO findFinishSend(@RequestParam(value = "page", defaultValue = "1") Integer page,
                                        @RequestParam(value = "size", defaultValue = "10") Integer size
                                        ){
 
         PageRequest request = new PageRequest(page - 1, size);
-        return orderService.findFinishSend(request);
+        return ResultVOUtil.success(orderService.findFinishSend(request));
     }
 
     //查询状态为已取消的订单
     @GetMapping("/findCancel")
     @ResponseBody
-    public Page<OrderDTO> findCancel(@RequestParam(value = "page", defaultValue = "1") Integer page,
-                                         @RequestParam(value = "size", defaultValue = "10") Integer size
+    public ResultVO findCancel(@RequestParam(value = "page", defaultValue = "1") Integer page,
+                               @RequestParam(value = "size", defaultValue = "10") Integer size
                                          ){
 
         PageRequest request = new PageRequest(page - 1, size);
-        return orderService.findCancel(request);
+        return ResultVOUtil.success(orderService.findCancel(request));
+
     }
 
     //查询状态为待接单的订单
     @GetMapping("/findWaitRecevice")
     @ResponseBody
-    public Page<OrderDTO> findWaitRecevice(@RequestParam(value = "page", defaultValue = "1") Integer page,
+    public ResultVO findWaitRecevice(@RequestParam(value = "page", defaultValue = "1") Integer page,
                                            @RequestParam(value = "size", defaultValue = "10") Integer size,
                                            String buyerOpenid){
 
         PageRequest request = new PageRequest(page - 1, size);
-        return orderService.findWaitRecevice(buyerOpenid,request);
+        return ResultVOUtil.success(orderService.findWaitRecevice(buyerOpenid,request));
     }
 
     //查询状态为待收货的订单
     @GetMapping("/findWaitGet")
     @ResponseBody
-    public Page<OrderDTO> findWaitGet(@RequestParam(value = "page", defaultValue = "1") Integer page,
+    public ResultVO findWaitGet(@RequestParam(value = "page", defaultValue = "1") Integer page,
                                            @RequestParam(value = "size", defaultValue = "10") Integer size,
                                            String buyerOpenid){
 
         PageRequest request = new PageRequest(page - 1, size);
-        return orderService.findWaitGet(buyerOpenid,request);
+        return ResultVOUtil.success(orderService.findWaitGet(buyerOpenid,request));
     }
 
     //查询状态为已收货的订单
     @GetMapping("/findFinishGet")
     @ResponseBody
-    public Page<OrderDTO> findFinishGet(@RequestParam(value = "page", defaultValue = "1") Integer page,
+    public ResultVO findFinishGet(@RequestParam(value = "page", defaultValue = "1") Integer page,
                                       @RequestParam(value = "size", defaultValue = "10") Integer size,
                                       String buyerOpenid){
 
         PageRequest request = new PageRequest(page - 1, size);
-        return orderService.findFinishGet(buyerOpenid,request);
+        return ResultVOUtil.success(orderService.findFinishGet(buyerOpenid,request));
     }
 
     //查询状态为用户个人已取消的订单
     @GetMapping("/findUserCancel")
     @ResponseBody
-    public Page<OrderDTO> findUserCancel(@RequestParam(value = "page", defaultValue = "1") Integer page,
+    public ResultVO findUserCancel(@RequestParam(value = "page", defaultValue = "1") Integer page,
                                         @RequestParam(value = "size", defaultValue = "10") Integer size,
                                         String buyerOpenid){
 
         PageRequest request = new PageRequest(page - 1, size);
-        return orderService.findUserCancel(buyerOpenid,request);
+        return ResultVOUtil.success(orderService.findUserCancel(buyerOpenid,request));
     }
 
     //查询状态为用户个人未支付的订单
     @GetMapping("/findUserNoPay")
     @ResponseBody
-    public Page<OrderDTO> findUserNoPay(@RequestParam(value = "page", defaultValue = "1") Integer page,
+    public ResultVO findUserNoPay(@RequestParam(value = "page", defaultValue = "1") Integer page,
                                          @RequestParam(value = "size", defaultValue = "10") Integer size,
                                          String buyerOpenid){
 
         PageRequest request = new PageRequest(page - 1, size);
-        return orderService.findUserNoPay(buyerOpenid,request);
+        return ResultVOUtil.success(orderService.findUserNoPay(buyerOpenid,request));
     }
 }

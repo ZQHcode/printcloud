@@ -59,6 +59,11 @@ public interface OrderService {
     /** 查询微信用户订单状态为取消的订单*/
     Page<OrderDTO> findUserCancel(String buyerOpenid,Pageable pageable);
 
+    /** 查询微信用户订单状态为未支付的订单*/
+    Page<OrderDTO> findUserNoPay(String buyerOpenid,Pageable pageable);
+
+
+
 
 
 

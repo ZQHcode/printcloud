@@ -70,6 +70,12 @@ public class OrderServiceImpl implements OrderService {
 
         List<OrderDTO> orderDTOList = OrderMaster2OrderDTOConverter.convert(orderMasterPage.getContent());
 
+        for (OrderDTO orderDTO : orderDTOList){
+
+            orderDTO.setOrderDetailList(orderDetailRepository.findByOrderId(orderDTO.getOrderId()));
+
+
+        }
         return new PageImpl<OrderDTO>(orderDTOList, pageable, orderMasterPage.getTotalElements());
     }
 
@@ -104,8 +110,31 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDTO send(OrderDTO orderDTO) {
-        return null;
+
+        //判断订单状态
+        if (!orderDTO.getOrderStatus().equals(OrderStatusEnum.NEW.getCode())) {
+            log.error("【配送订单】订单状态不正确, orderId={}, orderStatus={}", orderDTO.getOrderId(), orderDTO.getOrderStatus());
+            throw new OrderException(ResultEnum.ORDER_STATUS_ERROR);
+        }
+
+        if (!orderDTO.getPayStatus().equals(PayStatusEnum.SUCCESS.getCode())){
+            log.error("【配送订单】订单状态不正确, orderId={}, payStatus={}", orderDTO.getOrderId(), orderDTO.getPayStatus());
+            throw new OrderException(ResultEnum.ORDER_PAY_STATUS_ERROR);
+        }
+
+        //修改订单状态
+        orderDTO.setOrderStatus(OrderStatusEnum.WAIT_SEND.getCode());
+        OrderMaster orderMaster = new OrderMaster();
+        BeanUtils.copyProperties(orderDTO, orderMaster);
+        OrderMaster updateResult = orderMasterRepository.save(orderMaster);
+        if (updateResult == null) {
+            log.error("【配送订单】更新失败, orderMaster={}", orderMaster);
+            throw new OrderException(ResultEnum.ORDER_UPDATE_FAIL);
+        }
+
+        return orderDTO;
     }
 
     @Override
@@ -127,13 +156,30 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderException(ResultEnum.ORDER_UPDATE_FAIL);
         }
 
-
         return orderDTO;
     }
 
     @Override
     public OrderDTO paid(OrderDTO orderDTO) {
-        return null;
+
+        //判断支付状态
+        if (!orderDTO.getPayStatus().equals(PayStatusEnum.WAIT.getCode())) {
+            log.error("【订单支付完成】订单支付状态不正确, orderDTO={}", orderDTO);
+            throw new OrderException(ResultEnum.ORDER_PAY_STATUS_ERROR);
+        }
+
+        //修改支付状态
+        orderDTO.setPayStatus(PayStatusEnum.SUCCESS.getCode());
+        orderDTO.setOrderStatus(OrderStatusEnum.NEW.getCode());
+        OrderMaster orderMaster = new OrderMaster();
+        BeanUtils.copyProperties(orderDTO, orderMaster);
+        OrderMaster updateResult = orderMasterRepository.save(orderMaster);
+        if (updateResult == null) {
+            log.error("【订单支付完成】更新失败, orderMaster={}", orderMaster);
+            throw new OrderException(ResultEnum.ORDER_UPDATE_FAIL);
+        }
+
+        return orderDTO;
     }
 
     @Override
@@ -143,46 +189,156 @@ public class OrderServiceImpl implements OrderService {
 
         List<OrderDTO> orderDTOList = OrderMaster2OrderDTOConverter.convert(orderMasterPage.getContent());
 
+        for (OrderDTO orderDTO : orderDTOList){
+
+            orderDTO.setOrderDetailList(orderDetailRepository.findByOrderId(orderDTO.getOrderId()));
+
+        }
+
         return new PageImpl<>(orderDTOList, pageable, orderMasterPage.getTotalElements());
     }
 
     @Override
     public Page<OrderDTO> findWaitPrint(Pageable pageable) {
-        return null;
+
+        Page<OrderMaster> orderMasterPage = orderMasterRepository.findByOrderStatusAndPayStatus(OrderStatusEnum.NEW.getCode(), PayStatusEnum.SUCCESS.getCode(), pageable);
+
+        List<OrderDTO> orderDTOList = OrderMaster2OrderDTOConverter.convert(orderMasterPage.getContent());
+
+        for (OrderDTO orderDTO : orderDTOList){
+
+            orderDTO.setOrderDetailList(orderDetailRepository.findByOrderId(orderDTO.getOrderId()));
+
+        }
+
+        return new PageImpl<>(orderDTOList, pageable, orderMasterPage.getTotalElements());
     }
 
     @Override
     public Page<OrderDTO> findWaitSend(Pageable pageable) {
-        return null;
+
+        Page<OrderMaster> orderMasterPage = orderMasterRepository.findByOrderStatusAndPayStatus(OrderStatusEnum.WAIT_SEND.getCode(), PayStatusEnum.SUCCESS.getCode(), pageable);
+
+        List<OrderDTO> orderDTOList = OrderMaster2OrderDTOConverter.convert(orderMasterPage.getContent());
+
+        for (OrderDTO orderDTO : orderDTOList){
+
+            orderDTO.setOrderDetailList(orderDetailRepository.findByOrderId(orderDTO.getOrderId()));
+
+        }
+
+        return new PageImpl<>(orderDTOList, pageable, orderMasterPage.getTotalElements());
     }
 
     @Override
     public Page<OrderDTO> findFinishSend(Pageable pageable) {
-        return null;
+
+        Page<OrderMaster> orderMasterPage = orderMasterRepository.findByOrderStatusAndPayStatus(OrderStatusEnum.SENT.getCode(), PayStatusEnum.SUCCESS.getCode(), pageable);
+
+        List<OrderDTO> orderDTOList = OrderMaster2OrderDTOConverter.convert(orderMasterPage.getContent());
+
+        for (OrderDTO orderDTO : orderDTOList){
+
+            orderDTO.setOrderDetailList(orderDetailRepository.findByOrderId(orderDTO.getOrderId()));
+
+        }
+
+        return new PageImpl<>(orderDTOList, pageable, orderMasterPage.getTotalElements());
     }
 
     @Override
     public Page<OrderDTO> findCancel(Pageable pageable) {
-        return null;
+
+        Page<OrderMaster> orderMasterPage = orderMasterRepository.findByOrderStatusAndPayStatus(OrderStatusEnum.CANCEL.getCode(), PayStatusEnum.SUCCESS.getCode(), pageable);
+
+        List<OrderDTO> orderDTOList = OrderMaster2OrderDTOConverter.convert(orderMasterPage.getContent());
+
+        for (OrderDTO orderDTO : orderDTOList){
+
+            orderDTO.setOrderDetailList(orderDetailRepository.findByOrderId(orderDTO.getOrderId()));
+
+        }
+
+        return new PageImpl<>(orderDTOList, pageable, orderMasterPage.getTotalElements());
     }
 
     @Override
     public Page<OrderDTO> findWaitRecevice(String buyerOpenid, Pageable pageable) {
-        return null;
+
+        Page<OrderMaster> orderMasterPage = orderMasterRepository.findByOrderStatusAndPayStatusAndBuyerOpenid(OrderStatusEnum.NEW.getCode(),PayStatusEnum.SUCCESS.getCode(),buyerOpenid,pageable);
+
+        List<OrderDTO> orderDTOList = OrderMaster2OrderDTOConverter.convert(orderMasterPage.getContent());
+
+        for (OrderDTO orderDTO : orderDTOList){
+
+            orderDTO.setOrderDetailList(orderDetailRepository.findByOrderId(orderDTO.getOrderId()));
+
+        }
+
+        return new PageImpl<>(orderDTOList, pageable, orderMasterPage.getTotalElements());
     }
 
     @Override
     public Page<OrderDTO> findWaitGet(String buyerOpenid, Pageable pageable) {
-        return null;
+
+        Page<OrderMaster> orderMasterPage = orderMasterRepository.findByOrderStatusAndPayStatusAndBuyerOpenid(OrderStatusEnum.WAIT_SEND.getCode(),PayStatusEnum.SUCCESS.getCode(),buyerOpenid,pageable);
+
+        List<OrderDTO> orderDTOList = OrderMaster2OrderDTOConverter.convert(orderMasterPage.getContent());
+
+        for (OrderDTO orderDTO : orderDTOList){
+
+            orderDTO.setOrderDetailList(orderDetailRepository.findByOrderId(orderDTO.getOrderId()));
+
+        }
+
+        return new PageImpl<>(orderDTOList, pageable, orderMasterPage.getTotalElements());
     }
 
     @Override
     public Page<OrderDTO> findFinishGet(String buyerOpenid, Pageable pageable) {
-        return null;
+
+        Page<OrderMaster> orderMasterPage = orderMasterRepository.findByOrderStatusAndPayStatusAndBuyerOpenid(OrderStatusEnum.SENT.getCode(),PayStatusEnum.SUCCESS.getCode(),buyerOpenid,pageable);
+
+        List<OrderDTO> orderDTOList = OrderMaster2OrderDTOConverter.convert(orderMasterPage.getContent());
+
+        for (OrderDTO orderDTO : orderDTOList){
+
+            orderDTO.setOrderDetailList(orderDetailRepository.findByOrderId(orderDTO.getOrderId()));
+
+        }
+
+        return new PageImpl<>(orderDTOList, pageable, orderMasterPage.getTotalElements());
     }
 
     @Override
     public Page<OrderDTO> findUserCancel(String buyerOpenid, Pageable pageable) {
-        return null;
+
+        Page<OrderMaster> orderMasterPage = orderMasterRepository.findByOrderStatusAndPayStatusAndBuyerOpenid(OrderStatusEnum.CANCEL.getCode(),PayStatusEnum.SUCCESS.getCode(),buyerOpenid,pageable);
+
+        List<OrderDTO> orderDTOList = OrderMaster2OrderDTOConverter.convert(orderMasterPage.getContent());
+
+        for (OrderDTO orderDTO : orderDTOList){
+
+            orderDTO.setOrderDetailList(orderDetailRepository.findByOrderId(orderDTO.getOrderId()));
+
+        }
+
+        return new PageImpl<>(orderDTOList, pageable, orderMasterPage.getTotalElements());
+    }
+
+    @Override
+    public Page<OrderDTO> findUserNoPay(String buyerOpenid, Pageable pageable) {
+
+        Page<OrderMaster> orderMasterPage = orderMasterRepository.findByOrderStatusAndPayStatusAndBuyerOpenid(OrderStatusEnum.NEW.getCode(),PayStatusEnum.WAIT.getCode(),buyerOpenid,pageable);
+
+        List<OrderDTO> orderDTOList = OrderMaster2OrderDTOConverter.convert(orderMasterPage.getContent());
+
+        for (OrderDTO orderDTO : orderDTOList){
+
+            orderDTO.setOrderDetailList(orderDetailRepository.findByOrderId(orderDTO.getOrderId()));
+
+        }
+
+        return new PageImpl<>(orderDTOList, pageable, orderMasterPage.getTotalElements());
     }
 }

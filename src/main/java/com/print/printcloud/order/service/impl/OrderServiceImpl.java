@@ -344,4 +344,29 @@ public class OrderServiceImpl implements OrderService {
 
         return new PageImpl<>(orderDTOList, pageable, orderMasterPage.getTotalElements());
     }
+
+    @Override
+    @Transactional
+    public void deleteByOrderId(String orderId) {
+
+        OrderMaster orderMaster = orderMasterRepository.findById(orderId).orElse(null);
+        if (orderMaster == null) {
+            throw new OrderException(ResultEnum.ORDER_NOT_EXIST);
+        }
+
+        List<OrderDetail> orderDetailList = orderDetailRepository.findByOrderId(orderId);
+        if (CollectionUtils.isEmpty(orderDetailList)) {
+            throw new OrderException(ResultEnum.ORDERDETAIL_NOT_EXIST);
+        }
+
+        //判断订单状态
+        Integer orderStatus = orderMaster.getOrderStatus();
+        if (!(orderStatus.equals(OrderStatusEnum.CANCEL.getCode())) && !(orderStatus.equals(OrderStatusEnum.SENT.getCode()))){
+
+            log.error("【取消订单】订单状态不正确, orderId={}, orderStatus={}", orderMaster.getOrderId(), orderMaster.getOrderStatus());
+            throw new OrderException(ResultEnum.ORDER_STATUS_ERROR);
+        }
+        orderDetailRepository.deleteByOrderId(orderId);
+        orderMasterRepository.deleteById(orderId);
+    }
 }

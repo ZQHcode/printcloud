@@ -34,6 +34,9 @@ public class OrderDTO {
     /** 买家微信Openid. */
     private String buyerOpenid;
 
+    /** 订单配送费. */
+    private BigDecimal sendAmount;
+
     /** 订单总金额. */
     private BigDecimal orderAmount;
 
@@ -44,11 +47,11 @@ public class OrderDTO {
     private Integer payStatus;
 
     /** 创建时间. */
-    @JsonSerialize(using = Date2LongSerializer.class)
+//    @JsonSerialize(using = Date2LongSerializer.class)
     private Date createTime;
 
     /** 更新时间. */
-    @JsonSerialize(using = Date2LongSerializer.class)
+//    @JsonSerialize(using = Date2LongSerializer.class)
     private Date updateTime;
 
     List<OrderDetail> orderDetailList;

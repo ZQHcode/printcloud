@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 @RequestMapping("/order")
 @Slf4j
+@CrossOrigin
 public class OrderController {
 
     @Autowired
@@ -194,5 +195,14 @@ public class OrderController {
 
         PageRequest request = new PageRequest(page - 1, size);
         return ResultVOUtil.success(orderService.findUserNoPay(buyerOpenid,request));
+    }
+
+    //根据订单OrderId删除订单
+    @PostMapping("/deleteByOrderId")
+    @ResponseBody
+    public ResultVO findUserNoPay(@RequestParam("orderId") String orderId){
+
+        orderService.deleteByOrderId(orderId);
+        return ResultVOUtil.success();
     }
 }

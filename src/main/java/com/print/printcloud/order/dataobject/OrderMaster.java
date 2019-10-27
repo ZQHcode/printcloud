@@ -35,6 +35,9 @@ public class OrderMaster {
     /** 买家微信Openid. */
     private String buyerOpenid;
 
+    /** 订单配送费. */
+    private BigDecimal sendAmount;
+
     /** 订单总金额. */
     private BigDecimal orderAmount;
 

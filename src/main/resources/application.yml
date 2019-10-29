@@ -11,6 +11,10 @@ spring:
     active: dev
 
 wechat:
-  mpAppId: wxf3d340ebe4ee053e
-  mpAppSecret: c278eb990a861d31e0d2411ceac4ac8c
+  miniAppId: wxf3d340ebe4ee053e
+  miniAppSecret: c278eb990a861d31e0d2411ceac4ac8c
+  mchId:
+  mchKey:
+  keyPath:
+  notifyUrl: http://******/wechat/notify
 

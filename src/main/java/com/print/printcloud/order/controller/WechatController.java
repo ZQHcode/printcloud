@@ -2,17 +2,31 @@ package com.print.printcloud.order.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.google.gson.Gson;
+import com.lly835.bestpay.enums.BestPayPlatformEnum;
+import com.lly835.bestpay.enums.BestPayTypeEnum;
+import com.lly835.bestpay.model.PayRequest;
+import com.lly835.bestpay.model.PayResponse;
+import com.lly835.bestpay.service.impl.BestPayServiceImpl;
+import com.lly835.bestpay.utils.JsonUtil;
 import com.print.printcloud.order.config.WechatAccountConfig;
+import com.print.printcloud.order.dto.OrderDTO;
+import com.print.printcloud.order.enums.ResultEnum;
+import com.print.printcloud.order.exception.OrderException;
+import com.print.printcloud.order.service.OrderService;
+import com.print.printcloud.order.service.PayService;
+import com.print.printcloud.order.utils.MathUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.servlet.ModelAndView;
 import java.util.List;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Map;
 import java.io.*;
+
 /**
  * Created by 郑钦泓
  * 2019-10-26 17:13
@@ -26,23 +40,31 @@ public class WechatController {
     @Autowired
     WechatAccountConfig wechatAccountConfig;
 
+    @Autowired
+    private PayService payService;
+
+    @Autowired
+    private OrderService orderService;
+
+    @Autowired
+    private BestPayServiceImpl bestPayService;
+
     @PostMapping("/getOpenid")
     @ResponseBody
-    public String getOpenid(@RequestParam(value="code",required=false)String code) {//接收用户传过来的code，required=false表明如果这个参数没有传过来也可以。
-
-
+    public String getOpenid(@RequestParam(value="code",required=false)String code) {
+        //接收用户传过来的code，required=false表明如果这个参数没有传过来也可以。
         //接收从客户端获取的code
         //向微信后台发起请求获取openid的url
         String WX_URL = "https://api.weixin.qq.com/sns/jscode2session?appid=APPID&secret=SECRET&js_code=JSCODE&grant_type=authorization_code";
 
         //这三个参数就是之后要填上自己的值。
-        log.info("return APPID is ：{}", wechatAccountConfig.getMpAppId());
-        log.info("return SECRET is ：{}", wechatAccountConfig.getMpAppSecret());
+        log.info("return APPID is ：{}", wechatAccountConfig.getMiniAppId());
+        log.info("return SECRET is ：{}", wechatAccountConfig.getMiniAppSecret());
         log.info("return code is ：{}", code);
 
         //替换appid，appsecret，和code
-        String requestUrl = WX_URL.replace("APPID", wechatAccountConfig.getMpAppId()).//填写自己的appid
-                replace("SECRET", wechatAccountConfig.getMpAppSecret()).replace("JSCODE", code).//填写自己的appsecret，
+        String requestUrl = WX_URL.replace("APPID", wechatAccountConfig.getMiniAppId()).//填写自己的appid
+                replace("SECRET", wechatAccountConfig.getMiniAppSecret()).replace("JSCODE", code).//填写自己的appsecret，
                 replace("authorization_code", "authorization_code");
 
         //调用get方法发起get请求，并把返回值赋值给returnvalue
@@ -102,5 +124,37 @@ public class WechatController {
         return result;
     }
 
+    /**
+     * 小程序支付
+     * @param code
+     * @return
+     */
+    @GetMapping(value = "/mini_pay")
+    @ResponseBody
+    public PayResponse minipay(@RequestParam(value ="orderId") String orderId,
+                               @RequestParam(value = "code") String code){
 
+        //1. 查询订单
+        OrderDTO orderDTO = orderService.findOne(orderId);
+        if (orderDTO == null) {
+            throw new OrderException(ResultEnum.ORDER_NOT_EXIST);
+        }
+
+        //2. 发起支付
+        PayResponse payResponse = payService.pay(orderDTO,code);
+
+        return payResponse;
+    }
+
+    /**
+     * 异步回调
+     */
+    @PostMapping(value = "/notify")
+    public ModelAndView notify(@RequestBody String notifyData) {
+
+        payService.notify(notifyData);
+
+        //返回给微信处理结果
+        return new ModelAndView("pay/success");
+    }
 }

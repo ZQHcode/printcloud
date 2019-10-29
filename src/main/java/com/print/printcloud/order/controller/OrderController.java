@@ -11,6 +11,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * Created by 郑钦泓
  * 2019-10-25 21:53
@@ -205,4 +208,23 @@ public class OrderController {
         orderService.deleteByOrderId(orderId);
         return ResultVOUtil.success();
     }
+
+    /** 批量修改订单状态为已配送或已收货. */
+    @PostMapping("/batchFinish")
+    @ResponseBody
+    public ResultVO batchFinish(@RequestParam("orderIds") List<String> orderIds){
+
+        List<OrderDTO> orderDTOList = orderIds.stream().map(e -> orderService.findOne(e)).collect(Collectors.toList());
+        orderService.batchFinish(orderDTOList);
+        return ResultVOUtil.success();
+    };
+
+    /** 根据orderId批量删除订单*/
+    @PostMapping("/batchDeleteByOrderId")
+    @ResponseBody
+    public ResultVO batchDeleteByOrderId(@RequestParam("orderIds") List<String> orderIds){
+
+        orderService.batchDeleteByOrderId(orderIds);
+        return ResultVOUtil.success();
+    };
 }

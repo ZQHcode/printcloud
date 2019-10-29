@@ -4,6 +4,8 @@ import com.print.printcloud.order.dto.OrderDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 /**
  * Created by 郑钦泓
  * 2019-10-24 20:45
@@ -65,7 +67,10 @@ public interface OrderService {
     /** 根据orderId删除订单*/
     void deleteByOrderId(String orderId);
 
+    /** 批量修改订单状态为已配送或已收货. */
+    List<OrderDTO> batchFinish(List<OrderDTO> orderDTO);
 
-
+    /** 根据orderId批量删除订单*/
+    void batchDeleteByOrderId(List<String> orderId);
 
 }

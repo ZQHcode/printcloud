@@ -10,6 +10,7 @@ import com.print.printcloud.order.enums.PayStatusEnum;
 import com.print.printcloud.order.enums.ResultEnum;
 import com.print.printcloud.order.exception.OrderException;
 import com.print.printcloud.order.service.OrderService;
+import com.print.printcloud.order.service.PayService;
 import com.print.printcloud.order.utils.OrderMaster2OrderDTOConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -35,6 +36,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderMasterRepository orderMasterRepository;
+
+    @Autowired
+    private PayService payService;
 
     @Override
     public OrderDTO create(OrderDTO orderDTO) {
@@ -103,11 +107,9 @@ public class OrderServiceImpl implements OrderService {
         }
 
         //如果已支付, 需要退款
-        if (payStatus.equals(PayStatusEnum.SUCCESS.getCode())) {
+        if (orderDTO.getPayStatus().equals(PayStatusEnum.SUCCESS.getCode())) {
 //            payService.refund(orderDTO);
-            //TODO
         }
-
 
         return orderDTO;
     }
@@ -368,5 +370,19 @@ public class OrderServiceImpl implements OrderService {
         }
         orderDetailRepository.deleteByOrderId(orderId);
         orderMasterRepository.deleteById(orderId);
+    }
+
+    @Override
+    @Transactional
+    public List<OrderDTO> batchFinish(List<OrderDTO> orderDTO) {
+        orderDTO.stream().forEach(e->finish(e));
+        return orderDTO;
+
+    }
+
+    @Override
+    @Transactional
+    public void batchDeleteByOrderId(List<String> orderId) {
+        orderId.stream().forEach(e->deleteByOrderId(e));
     }
 }

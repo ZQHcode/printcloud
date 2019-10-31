@@ -4,13 +4,18 @@ import com.print.printcloud.order.dao.OrderDetailRepository;
 import com.print.printcloud.order.dao.OrderMasterRepository;
 import com.print.printcloud.order.dataobject.OrderDetail;
 import com.print.printcloud.order.dataobject.OrderMaster;
+import com.print.printcloud.order.dataobject.Paper;
+import com.print.printcloud.order.dataobject.PrintParameter;
 import com.print.printcloud.order.dto.OrderDTO;
 import com.print.printcloud.order.enums.OrderStatusEnum;
 import com.print.printcloud.order.enums.PayStatusEnum;
 import com.print.printcloud.order.enums.ResultEnum;
 import com.print.printcloud.order.exception.OrderException;
 import com.print.printcloud.order.service.OrderService;
+import com.print.printcloud.order.service.PaperService;
 import com.print.printcloud.order.service.PayService;
+import com.print.printcloud.order.service.PrintParameterService;
+import com.print.printcloud.order.utils.KeyUtil;
 import com.print.printcloud.order.utils.OrderMaster2OrderDTOConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -21,6 +26,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -38,12 +46,64 @@ public class OrderServiceImpl implements OrderService {
     private OrderMasterRepository orderMasterRepository;
 
     @Autowired
+    private PrintParameterService printParameterService;
+
+    @Autowired
     private PayService payService;
 
+    @Autowired
+    private PaperService paperService;
+
     @Override
+    @Transactional
     public OrderDTO create(OrderDTO orderDTO) {
 
-        return null;
+        String orderId = KeyUtil.genUniqueKey();
+        BigDecimal orderAmount = new BigDecimal(BigInteger.ZERO);
+
+//        List<CartDTO> cartDTOList = new ArrayList<>();
+
+        //1. 查询（数量, 价格）
+        for (OrderDetail orderDetail: orderDTO.getOrderDetailList()) {
+            
+            PrintParameter printParameter =  printParameterService.findOne(orderDetail.getProductId());
+            if (printParameter == null) {
+                throw new OrderException(ResultEnum.File_NOT_EXIST);
+            }
+
+            Paper paper = paperService.findOne("1");
+            //2. 计算订单总价
+            orderDetail.setProductName(printParameter.getFileName());
+            BigDecimal productPrice = paper.getPprice()
+                    .multiply(new BigDecimal(printParameter.getPages()));
+            //设置文件的价格
+            orderDetail.setProductPrice(productPrice);
+            orderAmount = productPrice
+                    .multiply(new BigDecimal(printParameter.getNumber()))
+                    .add(orderAmount);
+
+            //订单详情入库
+            orderDetail.setDetailId(KeyUtil.genUniqueKey());
+            orderDetail.setOrderId(orderId);
+            orderDetail.setProductQuantity(printParameter.getNumber());
+            orderDetail.setPageId("1");
+            orderDetailRepository.save(orderDetail);
+        }
+
+
+        //3. 写入订单数据库（orderMaster和orderDetail）
+        OrderMaster orderMaster = new OrderMaster();
+        orderDTO.setOrderId(orderId);
+        BeanUtils.copyProperties(orderDTO, orderMaster);
+        BigDecimal sendAmount = new BigDecimal(1);
+        orderMaster.setSendAmount(sendAmount);
+        orderAmount = orderAmount.add(sendAmount);
+        orderMaster.setOrderAmount(orderAmount);
+
+        orderMaster.setOrderStatus(OrderStatusEnum.NEW.getCode());
+        orderMaster.setPayStatus(PayStatusEnum.WAIT.getCode());
+        orderMasterRepository.save(orderMaster);
+        return orderDTO;
     }
 
     @Override
@@ -378,6 +438,13 @@ public class OrderServiceImpl implements OrderService {
         orderDTO.stream().forEach(e->finish(e));
         return orderDTO;
 
+    }
+
+    @Override
+    @Transactional
+    public List<OrderDTO> batchWaitSend(List<OrderDTO> orderDTO) {
+        orderDTO.stream().forEach(e->send(e));
+        return orderDTO;
     }
 
     @Override

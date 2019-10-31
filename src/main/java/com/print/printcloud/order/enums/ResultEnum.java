@@ -13,6 +13,8 @@ public enum ResultEnum {
 
     PARAM_ERROR(1, "参数不正确"),
 
+    File_NOT_EXIST(10, "文件不存在"),
+
     ORDER_NOT_EXIST(12, "订单不存在"),
 
     ORDERDETAIL_NOT_EXIST(13, "订单详情不存在"),
@@ -25,6 +27,8 @@ public enum ResultEnum {
 
     ORDER_PAY_STATUS_ERROR(17, "订单支付状态不正确"),
 
+    File_EMPTY(18, "文件为空"),
+
     ORDER_OWNER_ERROR(19, "该订单不属于当前用户"),
 
     WECHAT_MP_ERROR(20, "微信公众账号方面错误"),
@@ -34,6 +38,8 @@ public enum ResultEnum {
     ORDER_CANCEL_SUCCESS(22, "订单取消成功"),
 
     ORDER_FINISH_SUCCESS(23, "订单完结成功"),
+
+
     ;
 
     private Integer code;

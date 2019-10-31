@@ -1,16 +1,24 @@
 package com.print.printcloud.order.controller;
 
 import com.print.printcloud.order.dto.OrderDTO;
+import com.print.printcloud.order.enums.ResultEnum;
+import com.print.printcloud.order.exception.OrderException;
+import com.print.printcloud.order.form.OrderForm;
 import com.print.printcloud.order.service.OrderService;
+import com.print.printcloud.order.utils.OrderForm2OrderDTOConverter;
 import com.print.printcloud.order.utils.ResultVOUtil;
 import com.print.printcloud.order.vo.ResultVO;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.criterion.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.CollectionUtils;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,7 +37,25 @@ public class OrderController {
     private OrderService orderService;
 
     //创建订单
-    //TODO
+    @PostMapping("/create")
+    @ResponseBody
+    public ResultVO create(@Valid OrderForm orderForm,
+                           BindingResult bindingResult){
+        if (bindingResult.hasErrors()) {
+            log.error("【创建订单】参数不正确, orderForm={}", orderForm);
+            throw new OrderException(ResultEnum.PARAM_ERROR.getCode(),
+                    bindingResult.getFieldError().getDefaultMessage());
+        }
+
+        OrderDTO orderDTO = OrderForm2OrderDTOConverter.convert(orderForm);
+        if (CollectionUtils.isEmpty(orderDTO.getOrderDetailList())) {
+            log.error("【创建订单】文件不能为空");
+            throw new OrderException(ResultEnum.File_EMPTY);
+        }
+
+        OrderDTO createResult = orderService.create(orderDTO);
+        return ResultVOUtil.success(createResult.getOrderId());
+    }
 
     //查找一份订单
     @GetMapping("/findOne")
@@ -216,6 +242,16 @@ public class OrderController {
 
         List<OrderDTO> orderDTOList = orderIds.stream().map(e -> orderService.findOne(e)).collect(Collectors.toList());
         orderService.batchFinish(orderDTOList);
+        return ResultVOUtil.success();
+    };
+
+    /** 批量修改订单状态为待配送或待收货. */
+    @PostMapping("/batchWaitSend")
+    @ResponseBody
+    public ResultVO batchWaitSend(@RequestParam("orderIds") List<String> orderIds){
+
+        List<OrderDTO> orderDTOList = orderIds.stream().map(e -> orderService.findOne(e)).collect(Collectors.toList());
+        orderService.batchWaitSend(orderDTOList);
         return ResultVOUtil.success();
     };
 

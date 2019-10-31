@@ -70,6 +70,9 @@ public interface OrderService {
     /** 批量修改订单状态为已配送或已收货. */
     List<OrderDTO> batchFinish(List<OrderDTO> orderDTO);
 
+    /** 批量修改订单状态为待配送或待收货. */
+    List<OrderDTO> batchWaitSend(List<OrderDTO> orderDTO);
+
     /** 根据orderId批量删除订单*/
     void batchDeleteByOrderId(List<String> orderId);
 
